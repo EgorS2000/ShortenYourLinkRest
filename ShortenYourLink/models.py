@@ -53,5 +53,5 @@ class User(db.Model):
     def authenticate(cls, login, password):
         user = cls.query.filter(cls.login == login).one()
         if not check_password_hash(user.password, password):
-            return 'No user with this password'
+            return 'No user with this password', 400
         return user

@@ -38,9 +38,9 @@ def main_page():
             db.session.commit()
 
         except:
-            return 'Error with creating new link'
+            return 'Error with creating new link', 500
 
-    return link_schema.jsonify(link_struct)
+    return link_schema.jsonify(link_struct), 200
 
 
 @app.route('/check', methods=['POST'])
@@ -53,10 +53,10 @@ def check_link_page():
     if Link.query.filter_by(random_sequence=short_link_rand_sequence).first():
         real_link = Link.query.filter_by(random_sequence=short_link_rand_sequence).first().orig_link
 
-        return jsonify(real_link)
+        return jsonify(real_link), 200
 
     else:
-        return 'Short link does not exist'
+        return 'Short link does not exist', 400
 
 
 @app.route('/change_link', methods=['POST'])
@@ -80,16 +80,16 @@ def change_link_page():
 
             try:
                 db.session.commit()
-                return jsonify(f'{app_dmn}{short_link.random_sequence}')
+                return jsonify(f'{app_dmn}{short_link.random_sequence}'), 200
 
             except:
-                return "An error occurred while changing the link"
+                return "An error occurred while changing the link", 500
 
         else:
-            return "You are not owner of this link"
+            return "You are not owner of this link", 403
 
     else:
-        return "Original link doesn't exist or new link already exists"
+        return "Original link doesn't exist or new link already exists", 500
 
 
 @app.route('/my_links', methods=['GET'])
@@ -101,7 +101,7 @@ def my_links():
         links_list.append({"id": link.id, "original link": link.orig_link, "domain name": link.domain_name,
                            "random sequence": link.random_sequence, "link owner": link.link_owner,
                            "creation date": link.creation_date, "link tag": link.link_tag})
-    return jsonify(links_list)
+    return jsonify(links_list), 200
 
 
 @app.route('/deactivate_link', methods=['POST'])
@@ -125,18 +125,18 @@ def deactivate_link():
                     db.session.commit()
 
                 except:
-                    return "An error occurred while deleting of the link"
+                    return "An error occurred while deleting of the link", 500
 
             else:
-                return "You are not owner of this link"
+                return "You are not owner of this link", 403
 
         else:
-            return "Password does not correct"
+            return "Password does not correct", 400
 
     else:
-        return "Short link does not exist"
+        return "Short link does not exist", 500
 
-    return {"Deleted short link": short_link}
+    return {"Deleted short link": short_link}, 200
 
 
 @app.route('/my_account', methods=['GET'])
@@ -193,7 +193,7 @@ def my_account():
             "Trasitions during last week": trans_last_week,
             "Trasitions during 30 days": trans_last_30_days,
             "Trasitions during last year": trans_last_year,
-            "All domains": result_domain_dict}
+            "All domains": result_domain_dict}, 200
 
 
 @app.route('/my_links/<string:random_sequence>/more', methods=['GET'])
@@ -238,10 +238,10 @@ def my_link_delete(random_sequence):
                 "Trasitions during last day": link_trans_last_day,
                 "Trasitions during last week": link_trans_last_week,
                 "Trasitions during last 30 days": link_trans_last_30_days,
-                "Trasitions during last year": link_trans_last_year}
+                "Trasitions during last year": link_trans_last_year}, 200
 
     else:
-        return "You are not owner of this link"
+        return "You are not owner of this link", 403
 
 
 @app.route('/my_links/<string:random_sequence>/more/add_hashtag', methods=['POST'])
@@ -256,13 +256,13 @@ def add_hashtag(random_sequence):
         try:
             db.session.commit()
 
-            return {"Link": link.orig_link, "Random sequence": link.random_sequence, "Hashtag": link.link_tag}
+            return {"Link": link.orig_link, "Random sequence": link.random_sequence, "Hashtag": link.link_tag}, 200
 
         except:
-            return "An error occurred while adding hashtag"
+            return "An error occurred while adding hashtag", 500
 
     else:
-        return "You are not owner of this link"
+        return "You are not owner of this link", 403
 
 
 @app.route('/register', methods=['POST'])
@@ -272,13 +272,13 @@ def user_registration():
     registration_date = datetime.now()
 
     if not (login or password):
-        return 'Please, fill all fields'
+        return 'Please, fill all fields', 400
 
     elif not match(r'[0-9a-zA-Z!@#$%^&*]{8,}', str(password)):
-        return 'Your password must consist 8 and more latin letters and numbers'
+        return 'Your password must consist 8 and more latin letters and numbers', 400
 
     elif not match(r'^[a-zа-яA-ZА-Я-ёЁ_.][a-zа-яA-ZА-ЯёЁ0-9-_.]{1,20}$', login):
-        return 'Your login must consist from 2 to 20 latin letters and numbers'
+        return 'Your login must consist from 2 to 20 latin letters and numbers', 400
 
     else:
         hash_password = generate_password_hash(password)
@@ -288,11 +288,11 @@ def user_registration():
             db.session.add(new_user)
             db.session.commit()
         except:
-            return 'Login is already taken'
+            return 'Login is already taken', 400
 
         token = new_user.get_token()
 
-        return {'access_token': token}
+        return {'access_token': token}, 200
 
 
 @app.route('/login', methods=['POST'])
@@ -311,14 +311,14 @@ def user_login():
                 db.session.commit()
 
             except:
-                return "An error occurred while login"
+                return "An error occurred while login", 500
 
             user.authenticate(login=login, password=password)
             token = user.get_token()
 
-            return {'access_token': token}
+            return {'access_token': token}, 200
         else:
-            return 'Login or password is not correct'
+            return 'Login or password is not correct', 400
 
 
 @app.route('/delete_account', methods=['POST'])
@@ -327,7 +327,7 @@ def user_delete_account():
     user_password = request.json['password']
 
     if not check_password_hash(User.query.filter_by(id=get_jwt_identity()).first().password, user_password):
-        return 'Password is not correct'
+        return 'Password is not correct', 400
 
     else:
         user = User.query.filter_by(id=get_jwt_identity()).first()
@@ -344,9 +344,9 @@ def user_delete_account():
             db.session.commit()
 
         except:
-            return 'An error occurred while deleting account or deleting your links'
+            return 'An error occurred while deleting account or deleting your links', 500
 
-    return {"Deleted account": user_name}
+    return {"Deleted account": user_name}, 200
 
 
 @app.route('/change_password', methods=['POST'])
@@ -357,13 +357,13 @@ def user_change_password():
     new_password = request.json['new_password']
 
     if not (old_password or new_password):
-        return 'Please, fill all fields'
+        return 'Please, fill all fields', 400
 
     elif not check_password_hash(User.query.filter_by(id=get_jwt_identity()).first().password, old_password):
-        return 'Your old password is not correct'
+        return 'Your old password is not correct', 400
 
     elif not match(r'[0-9a-zA-Z!@#$%^&*]{8,}', str(new_password)):
-        return 'Your password must consist 8 and more latin letters and numbers'
+        return 'Your password must consist 8 and more latin letters and numbers', 400
 
     else:
         User.query.filter_by(id=get_jwt_identity()).first().password = generate_password_hash(new_password)
@@ -371,6 +371,6 @@ def user_change_password():
         try:
             db.session.commit()
         except:
-            return 'An error occurred while changing your password'
+            return 'An error occurred while changing your password', 500
 
-    return {"New password": new_password}
+    return {"New password": new_password}, 200
