@@ -199,7 +199,6 @@ def my_account():
 @app.route('/my_links/<string:random_sequence>/more', methods=['GET'])
 @jwt_required
 def my_link_delete(random_sequence):
-
     if int(get_jwt_identity()) == Link.query.filter_by(random_sequence=random_sequence).first().link_owner:
 
         link = Link.query.filter_by(random_sequence=random_sequence).first()
@@ -228,7 +227,7 @@ def my_link_delete(random_sequence):
         link_trans_last_year = 0
 
         for trans in Transitions.query.filter_by(link_id=link.id).all():
-            if (datetime.now() - trans.trans_time).seconds < 3.15 * 10**7:
+            if (datetime.now() - trans.trans_time).seconds < 3.15 * 10 ** 7:
                 link_trans_last_year += 1
 
         return {"Link": link.orig_link,
@@ -352,7 +351,6 @@ def user_delete_account():
 @app.route('/change_password', methods=['POST'])
 @jwt_required
 def user_change_password():
-
     old_password = request.json['old_password']
     new_password = request.json['new_password']
 
