@@ -1,0 +1,48 @@
+version: '3.8'
+services:
+  rabbit:
+    hostname: rabbit
+    image: rabbitmq:management
+    environment:
+      - RABBITMQ_DEFAULT_USER=rabbitmq
+      - RABBITMQ_DEFAULT_PASS=rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    volumes:
+      - .:/code
+
+  worker_1:
+    build:
+      context: .
+    hostname: worker_1
+    command: celery -A task worker -l info
+    volumes:
+      - .:/code
+    links:
+      - rabbit
+      - web
+    depends_on:
+      - rabbit
+      - web
+
+  worker_2:
+    build:
+      context: .
+    hostname: worker_2
+    command: celery -A task beat --loglevel=info
+    volumes:
+      - .:/code
+    links:
+      - rabbit
+      - web
+    depends_on:
+      - rabbit
+      - web

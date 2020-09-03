@@ -14,6 +14,7 @@ class Link(db.Model):
     random_sequence = db.Column(db.String(8), nullable=False, unique=True)
     link_owner = db.Column(db.Integer, default=0)
     creation_date = db.Column(db.DateTime, default=datetime.utcnow(), nullable=False)
+    life_time_end = db.Column(db.DateTime, default=datetime.max, nullable=False)
     link_tag = db.Column(db.String(32))
 
     def __repr__(self):
@@ -22,7 +23,8 @@ class Link(db.Model):
 
 class LinkSchema(ma.Schema):
     class Meta:
-        fields = ('id', 'orig_link', 'domain_name', 'random_sequence', 'link_owner', 'creation_date', 'link_tag')
+        fields = ('id', 'orig_link', 'domain_name', 'random_sequence', 'link_owner', 'creation_date', 'life_time_end',
+                  'link_tag')
 
 
 link_schema = LinkSchema()

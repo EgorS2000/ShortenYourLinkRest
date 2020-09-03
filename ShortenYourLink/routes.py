@@ -6,7 +6,7 @@ from ShortenYourLink.models import Link, link_schema, User, Transitions, app_dmn
 from flask import jsonify, request
 import secrets
 import string
-from datetime import datetime
+from datetime import datetime, timedelta, time
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -15,6 +15,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 @jwt_required
 def main_page():
     orig_link = request.json['link']
+
+    life_time_end = datetime.utcnow() + timedelta(days=int(request.json['life_time']))
 
     domain_name = orig_link[int(str(orig_link).find('/')) + 2:]
 
@@ -25,12 +27,12 @@ def main_page():
     link_owner = get_jwt_identity()
 
     link_struct = Link(orig_link=orig_link, domain_name=domain_name, random_sequence=random_sequence,
-                       link_owner=link_owner)
+                       link_owner=link_owner, life_time_end=life_time_end)
 
     if Link.query.filter_by(orig_link=orig_link, link_owner=link_owner).first():
         exist_rand_seq = Link.query.filter_by(orig_link=orig_link).first().random_sequence
         link_struct = Link(orig_link=orig_link, domain_name=domain_name, random_sequence=exist_rand_seq,
-                           link_owner=link_owner)
+                           link_owner=link_owner, life_time=life_time_end)
 
     else:
         try:
